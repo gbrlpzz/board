@@ -1,7 +1,7 @@
 ## Usage
 
 ### Basic Controls
-- **Pan**: Hold Alt + drag or use two-finger touchpad gesture
+- **Pan**: Hold Alt + drag
 - **Add Text**: Click anywhere on the canvas
 - **Add Image**: Drag and drop image files
 - **Select**: Click on any element
