@@ -1,7 +1,7 @@
 ## Usage
 
 ### Basic Controls
-- **Pan**: Hold Alt + drag or use two-finger touchpad gesture
+- **Pan**: Hold Alt + drag
 - **Add Text**: Click anywhere on the canvas
 - **Add Image**: Drag and drop image files
 - **Select**: Click on any element
@@ -18,28 +18,6 @@
 - **Undo**: Cmd/Ctrl + Z
 - **Delete**: Backspace (with element selected)
 - **Deselect**: Click empty canvas area
-
-## Technical Details
-
-Built with:
-- React 18
-- Vite
-- CSS Modules
-- react-draggable
-
-Performance optimizations:
-- Hardware-accelerated animations
-- Efficient state management
-- Optimized render cycles
-- Smart event handling
-
-## Design Principles
-
-1. **Minimal Interface**: Focus on content with subtle, purposeful UI elements
-2. **Fluid Interaction**: Crisp, immediate feedback with smooth animations
-3. **Precision**: Accurate positioning and resizing capabilities
-4. **Typography**: Clean, readable text with considered spacing
-5. **Performance**: Optimized for smooth operation even with many elements
 
 ## Browser Support
 
@@ -64,4 +42,3 @@ MIT License - feel free to use this in your own projects!
 
 - Inspired by modern design tools and note-taking apps
 - Built with performance and usability in mind
-- Typography inspired by classic design principles
