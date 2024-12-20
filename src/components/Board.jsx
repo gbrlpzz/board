@@ -526,6 +526,9 @@ const Board = () => {
           <div className="drop-zone">
             <p>Click anywhere to add text</p>
             <p>Drag and drop images here</p>
+            <p>
+              Learn more on <a href="https://github.com/gbrlpzz/board" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </p>
           </div>
         )}
       </div>

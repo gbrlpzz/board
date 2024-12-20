@@ -185,6 +185,16 @@
   margin: 6px 0;
 }
 
+.drop-zone a {
+  color: var(--text);
+  text-decoration: underline;
+  opacity: 0.6;
+}
+
+.drop-zone a:hover {
+  opacity: 1;
+}
+
 .text-resize-handle {
   display: none;
 }
