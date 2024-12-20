@@ -428,6 +428,19 @@ const Board = () => {
     });
   };
 
+  const handleReset = () => {
+    const confirmText = prompt('Type "delete CANVAS" to reset the board:');
+    if (confirmText === 'delete CANVAS') {
+      localStorage.clear();
+      setImages([]);
+      setTexts([]);
+      setTextStyles({});
+      setViewportOffset({ x: 0, y: 0 });
+    } else if (confirmText !== null) { // Only show error if user didn't cancel
+      alert('Incorrect confirmation text. Board was not reset.');
+    }
+  };
+
   return (
     <div 
       ref={boardRef}
@@ -562,7 +575,11 @@ const Board = () => {
         )}
       </div>
       <div className="board-controls">
-        <button className="reset-button" onClick={resetBoard}>
+        <button 
+          className="reset-button" 
+          onClick={handleReset}
+          title='Type "delete CANVAS" to reset'
+        >
           Reset Board
         </button>
         <button className="reset-button" onClick={returnToOrigin}>
