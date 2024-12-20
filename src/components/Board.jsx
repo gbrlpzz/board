@@ -18,14 +18,26 @@ const TEXT_STYLES = {
 };
 
 const Board = () => {
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState(() => {
+    const saved = localStorage.getItem('board-images');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [texts, setTexts] = useState(() => {
+    const saved = localStorage.getItem('board-texts');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [textStyles, setTextStyles] = useState(() => {
+    const saved = localStorage.getItem('board-text-styles');
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const [selectedId, setSelectedId] = useState(null);
   const [resizing, setResizing] = useState(null);
-  const [texts, setTexts] = useState([]);
   const [editingText, setEditingText] = useState(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [selectedText, setSelectedText] = useState(null);
-  const [textStyles, setTextStyles] = useState({});
   const [textResizing, setTextResizing] = useState(null);
   const initialTextWidth = useRef(0);
   const initialTextHeight = useRef(24);
@@ -364,6 +376,26 @@ const Board = () => {
     setIsPanning(false);
   };
 
+  // Add reset function
+  const resetBoard = () => {
+    setImages([]);
+    setTexts([]);
+    setTextStyles({});
+    setSelectedId(null);
+    setSelectedText(null);
+    setEditingText(null);
+    localStorage.removeItem('board-images');
+    localStorage.removeItem('board-texts');
+    localStorage.removeItem('board-text-styles');
+  };
+
+  // Save to localStorage whenever state changes
+  useEffect(() => {
+    localStorage.setItem('board-images', JSON.stringify(images));
+    localStorage.setItem('board-texts', JSON.stringify(texts));
+    localStorage.setItem('board-text-styles', JSON.stringify(textStyles));
+  }, [images, texts, textStyles]);
+
   return (
     <div 
       ref={boardRef}
@@ -492,6 +524,11 @@ const Board = () => {
             <p>Drag and drop images here</p>
           </div>
         )}
+      </div>
+      <div className="board-controls">
+        <button className="reset-button" onClick={resetBoard}>
+          Reset Board
+        </button>
       </div>
     </div>
   );

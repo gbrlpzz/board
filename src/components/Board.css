@@ -344,4 +344,28 @@
 .image-wrapper:hover .resize-handle {
   transition-delay: 0s;
 }
+
+.board-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.reset-button {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all var(--hover-duration) var(--transition-timing);
+}
+
+.reset-button:hover {
+  opacity: 1;
+  background: var(--accent-light);
+}
  
