@@ -164,6 +164,7 @@ const Board = () => {
         const newImages = [...images, newImage];
         setImages(newImages);
         saveToHistory(newImages, texts, textStyles);
+        localStorage.setItem('board-images', JSON.stringify(newImages));
       };
       
       img.src = event.target.result;
@@ -202,14 +203,18 @@ const Board = () => {
     newWidth = Math.max(50, Math.min(1000, newWidth));
     let newHeight = newWidth / aspectRatio;
 
-    setImages(prev => prev.map(img =>
-      img.id === resizing.id
-        ? { 
-            ...img, 
-            size: { width: newWidth, height: newHeight }
-          }
-        : img
-    ));
+    setImages(prev => {
+      const updatedImages = prev.map(img =>
+        img.id === resizing.id
+          ? { 
+              ...img, 
+              size: { width: newWidth, height: newHeight }
+            }
+          : img
+      );
+      localStorage.setItem('board-images', JSON.stringify(updatedImages));
+      return updatedImages;
+    });
   };
 
   const stopResize = () => {
@@ -393,12 +398,35 @@ const Board = () => {
     setViewportOffset({ x: 0, y: 0 });
   };
 
+  // Add useEffect to save positions on reload
+  useEffect(() => {
+    const savedImages = JSON.parse(localStorage.getItem('board-images'));
+    if (savedImages) {
+      setImages(savedImages);
+    }
+  }, []);
+
   // Save to localStorage whenever state changes
   useEffect(() => {
     localStorage.setItem('board-images', JSON.stringify(images));
     localStorage.setItem('board-texts', JSON.stringify(texts));
     localStorage.setItem('board-text-styles', JSON.stringify(textStyles));
   }, [images, texts, textStyles]);
+
+  const handleImageDragStop = (id, newPosition) => {
+    setImages(prev => {
+      const updatedImages = prev.map(img =>
+        img.id === id
+          ? { 
+              ...img, 
+              position: newPosition // Update the position
+            }
+          : img
+      );
+      localStorage.setItem('board-images', JSON.stringify(updatedImages)); // Save updated image positions
+      return updatedImages;
+    });
+  };
 
   return (
     <div 
@@ -441,6 +469,7 @@ const Board = () => {
             key={image.id}
             defaultPosition={image.position}
             cancel=".resize-handle"
+            onStop={(e, data) => handleImageDragStop(image.id, { x: data.x, y: data.y })}
           >
             <div 
               className={`image-wrapper ${selectedId === image.id ? 'selected' : ''}`}
