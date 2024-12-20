@@ -1,44 +1,40 @@
-## Usage
+# Canvas Board
 
-### Basic Controls
-- **Pan**: Hold Alt + drag
-- **Add Text**: Click anywhere on the canvas
-- **Add Image**: Drag and drop image files
-- **Select**: Click on any element
-- **Move**: Drag elements by their handles
-- **Resize**: Use corner handles when selected
-- **Delete**: Press Backspace with element selected
+A minimal board for text and images with infinite canvas. Everything stays in your browser.
 
-### Text Formatting
-- **Styles**: Use the floating toolbar to change text size
-- **Bold**: Cmd/Ctrl + B
-- **Italic**: Cmd/Ctrl + I
+## Features
 
-### Keyboard Shortcuts
-- **Undo**: Cmd/Ctrl + Z
-- **Delete**: Backspace (with element selected)
-- **Deselect**: Click empty canvas area
+- Infinite canvas
+- Text and images
+- Local browser storage
+- No server, no tracking
+- Instant load
 
-## Browser Support
+## Controls
 
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
+- **Pan**: Alt + drag
+- **Text**: Click anywhere
+- **Images**: Drag & drop
+- **Move**: Drag handles
+- **Resize**: Corner handles
+- **Delete**: Backspace
+- **Undo**: Ctrl/Cmd + Z
+- **Reset**: Bottom right button
 
-## Contributing
+## Privacy
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- All data stays in your browser
+- No cloud storage
+- No cookies
+- Works offline
+- Clear data with reset button
+
+## Stack
+
+- React
+- Vite
+- Local Storage API
 
 ## License
 
-MIT License - feel free to use this in your own projects!
-
-## Acknowledgments
-
-- Inspired by modern design tools and note-taking apps
-- Built with performance and usability in mind
+MIT
