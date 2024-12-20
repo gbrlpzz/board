@@ -389,6 +389,10 @@ const Board = () => {
     localStorage.removeItem('board-text-styles');
   };
 
+  const returnToOrigin = () => {
+    setViewportOffset({ x: 0, y: 0 });
+  };
+
   // Save to localStorage whenever state changes
   useEffect(() => {
     localStorage.setItem('board-images', JSON.stringify(images));
@@ -528,6 +532,9 @@ const Board = () => {
       <div className="board-controls">
         <button className="reset-button" onClick={resetBoard}>
           Reset Board
+        </button>
+        <button className="reset-button" onClick={returnToOrigin}>
+          Return to Origin
         </button>
       </div>
     </div>
