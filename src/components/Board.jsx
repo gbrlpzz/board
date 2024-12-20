@@ -36,6 +36,10 @@ const Board = () => {
   const [history, setHistory] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const initialPosition = useRef({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [viewportOffset, setViewportOffset] = useState({ x: 0, y: 0 });
+  const lastMousePosition = useRef({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
 
   // Helper function to save state to history
   const saveToHistory = (newImages, newTexts, newTextStyles) => {
@@ -118,9 +122,9 @@ const Board = () => {
 
     if (files.length === 0) return;
 
-    const boardRect = boardRef.current.getBoundingClientRect();
-    const dropX = e.clientX - boardRect.left - position.x;
-    const dropY = e.clientY - boardRect.top - position.y;
+    const contentRect = boardRef.current.querySelector('.board-content').getBoundingClientRect();
+    const x = e.clientX - contentRect.left;
+    const y = e.clientY - contentRect.top;
 
     const file = files[0];
     const reader = new FileReader();
@@ -138,8 +142,8 @@ const Board = () => {
           id: Date.now(),
           url: event.target.result,
           position: { 
-            x: dropX - width/2,
-            y: dropY - height/2
+            x: x - width/2,
+            y: y - height/2
           },
           size: { width, height },
           aspectRatio
@@ -166,6 +170,7 @@ const Board = () => {
   // Image resize handlers
   const startResize = (e, id, handle) => {
     e.stopPropagation();
+    setIsResizing(true);
     const image = images.find(img => img.id === id);
     initialMousePos.current = { x: e.clientX, y: e.clientY };
     initialSize.current = { ...image.size };
@@ -196,16 +201,24 @@ const Board = () => {
   };
 
   const stopResize = () => {
+    setIsResizing(false);
     setResizing(null);
   };
 
   const handleBoardClick = (e) => {
     if ((e.target === boardRef.current || e.target.classList.contains('board-content')) 
         && !e.target.closest('.text-wrapper')) {
+      const boardRect = boardRef.current.getBoundingClientRect();
+      const contentRect = boardRef.current.querySelector('.board-content').getBoundingClientRect();
+      
+      // Calculate position relative to the content area
+      const x = e.clientX - contentRect.left;
+      const y = e.clientY - contentRect.top;
+      
       const newText = {
         id: Date.now(),
         content: '',
-        position: { x: e.clientX - position.x, y: e.clientY - position.y }
+        position: { x, y }
       };
       
       const newTexts = [...texts, newText];
@@ -318,27 +331,75 @@ const Board = () => {
     saveToHistory(images, texts, newTextStyles);
   };
 
+  // Add pan handler
+  const handlePan = (e) => {
+    if (!isPanning) return;
+    
+    const dx = e.clientX - lastMousePosition.current.x;
+    const dy = e.clientY - lastMousePosition.current.y;
+    
+    setViewportOffset(prev => ({
+      x: prev.x + dx,
+      y: prev.y + dy
+    }));
+    
+    lastMousePosition.current = { x: e.clientX, y: e.clientY };
+  };
+
+  // Add pan start handler
+  const handlePanStart = (e) => {
+    // Only start panning on alt+click or two-finger touchpad gesture
+    if (e.altKey || (e.touches && e.touches.length === 2)) {
+      e.preventDefault();
+      setIsPanning(true);
+      lastMousePosition.current = { 
+        x: e.clientX || e.touches[0].clientX,
+        y: e.clientY || e.touches[0].clientY 
+      };
+    }
+  };
+
+  // Add pan end handler
+  const handlePanEnd = () => {
+    setIsPanning(false);
+  };
+
   return (
     <div 
       ref={boardRef}
-      className="board"
+      className={`board ${isPanning ? 'panning' : ''} ${isResizing ? 'resizing' : ''}`}
       onMouseMove={(e) => {
         handleMouseMove(e);
         handleTextResize(e);
+        handlePan(e);
       }}
       onMouseUp={() => {
         stopResize();
         stopTextResize();
+        handlePanEnd();
       }}
+      onMouseDown={handlePanStart}
       onMouseLeave={() => {
         stopResize();
         stopTextResize();
+        handlePanEnd();
       }}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
       onClick={handleBoardClick}
     >
-      <div className="board-content">
+      <div 
+        className="board-content"
+        style={{
+          transform: `translate3d(${viewportOffset.x}px, ${viewportOffset.y}px, 0)`,
+          width: '200%',
+          height: '200%',
+          left: '-50%',
+          top: '-50%',
+          position: 'absolute',
+          transformOrigin: '50% 50%'
+        }}
+      >
         {images.map((image) => (
           <Draggable 
             key={image.id}

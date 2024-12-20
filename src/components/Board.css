@@ -1,10 +1,14 @@
 :root {
   --accent: #1D4434;
-  --accent-light: rgba(29, 68, 52, 0.08);
-  --grid: #E8E8E8;
-  --text: #333333;
+  --accent-light: rgba(29, 68, 52, 0.03);
+  --grid: rgba(0, 0, 0, 0.04);
+  --text: #2C3338;
   --bg: #FFFFFF;
-  --border: #D1D1D1;
+  --border: rgba(0, 0, 0, 0.06);
+  --border-focus: rgba(0, 0, 0, 0.09);
+  --transition-timing: cubic-bezier(0.1, 0, 0, 1);
+  --transition-duration: 80ms;
+  --hover-duration: 40ms;
 }
 
 .board {
@@ -14,37 +18,51 @@
   background-color: var(--bg);
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transition: cursor var(--transition-duration) var(--transition-timing);
 }
 
 .board-content {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  background-image: radial-gradient(circle, var(--grid) 0.8px, transparent 0.8px);
+  background-image: radial-gradient(circle, var(--grid) 0.5px, transparent 0.5px);
   background-size: 24px 24px;
+  transition: none;
+  transform: translate3d(${viewportOffset.x}px, ${viewportOffset.y}px, 0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  will-change: transform;
+  transform-origin: center center;
+  pointer-events: all;
 }
 
 .image-wrapper {
   position: absolute;
   cursor: move;
-  transition: outline 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-duration) var(--transition-timing);
+  transform-origin: top left;
+  will-change: transform, outline;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-font-smoothing: antialiased;
 }
 
 .image-wrapper img {
   pointer-events: none;
   object-fit: contain;
-  filter: grayscale(100%);
   opacity: 0.95;
-  transition: filter 0.3s ease, opacity 0.3s ease;
+  transition: opacity 80ms ease-out;
+  will-change: opacity;
 }
 
 .image-wrapper:hover img {
-  filter: grayscale(0%);
   opacity: 1;
 }
 
 .image-wrapper.selected {
-  outline: 1px solid var(--border);
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
+  transition: outline-color 80ms ease-out;
 }
 
 .resize-handle {
@@ -54,7 +72,8 @@
   bottom: -8px;
   right: -8px;
   cursor: se-resize;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-duration) var(--transition-timing);
+  will-change: opacity;
   opacity: 0;
 }
 
@@ -63,10 +82,10 @@
   position: absolute;
   bottom: 4px;
   right: 4px;
-  width: 8px;
-  height: 8px;
-  border-right: 1.5px solid var(--text);
-  border-bottom: 1.5px solid var(--text);
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .image-wrapper.selected .resize-handle {
@@ -81,40 +100,53 @@
   position: absolute;
   display: flex;
   flex-direction: column;
-  padding: 2px;
-  transition: background-color 0.2s ease;
-  will-change: transform;
+  padding: 1px;
+  background: transparent;
+  border-radius: 2px;
+  transition: all var(--transition-duration) var(--transition-timing);
+  will-change: transform, background-color, outline;
   min-height: 32px;
+  transform-origin: top left;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-font-smoothing: antialiased;
 }
 
 .text-wrapper:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--accent-light);
 }
 
 .text-wrapper.editing {
   background: var(--bg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .text-wrapper textarea {
   border: 1px solid transparent;
+  border-radius: 2px;
   background: transparent;
-  font-family: inherit;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   padding: 4px 6px;
   color: var(--text);
-  transition: border-color 0.2s ease;
+  font-size: 14px;
+  line-height: 1.5;
   min-width: 100px;
   min-height: 32px;
   resize: none;
   overflow: hidden;
-  will-change: width, height;
-  line-height: 1.5;
-  display: block;
-  box-sizing: border-box;
+  transition: border-color var(--hover-duration) var(--transition-timing),
+              background-color var(--hover-duration) var(--transition-timing);
 }
 
 .text-wrapper.selected textarea {
   border-color: var(--border);
+}
+
+.text-wrapper.editing textarea {
+  background: var(--bg);
+  border-color: var(--border-focus);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .text-wrapper:hover .text-drag-handle,
@@ -128,7 +160,9 @@
 }
 
 .text-wrapper.selected {
-  outline: 1px solid var(--border);
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
+  transition: outline-color 80ms ease-out;
 }
 
 .text-wrapper.editing.selected {
@@ -168,11 +202,15 @@
   display: flex;
   gap: 1px;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--transition-duration) var(--transition-timing);
+  will-change: opacity;
   background: var(--bg);
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   border-radius: 4px;
-  border: 1px solid var(--border);
+  padding: 1px;
   overflow: hidden;
+  transform-origin: top right;
 }
 
 .text-wrapper.selected .text-style-toggles {
@@ -181,20 +219,22 @@
 
 .style-toggle {
   padding: 4px 8px;
-  cursor: pointer;
   font-size: 11px;
+  letter-spacing: 0.3px;
   color: var(--text);
-  background: var(--bg);
-  transition: all 0.15s ease;
+  opacity: 0.7;
+  transition: all var(--hover-duration) var(--transition-timing);
 }
 
 .style-toggle:hover {
   background: var(--accent-light);
+  opacity: 0.9;
 }
 
 .style-toggle.active {
   background: var(--accent-light);
   color: var(--accent);
+  opacity: 1;
 }
 
 .text-wrapper .resize-handle {
@@ -205,7 +245,8 @@
   right: -4px;
   cursor: nwse-resize;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--hover-duration) var(--transition-timing);
+  will-change: opacity;
 }
 
 .text-wrapper .resize-handle::before {
@@ -234,11 +275,12 @@
   transform: translateY(-50%);
   cursor: move;
   color: var(--text);
-  opacity: 0;
-  font-size: 12px;
+  opacity: 0.3;
+  font-size: 11px;
   padding: 4px;
   user-select: none;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--hover-duration) var(--transition-timing);
+  will-change: opacity;
 }
 
 .text-wrapper:hover .text-drag-handle,
@@ -254,5 +296,52 @@
 .text-controls,
 .text-resize-handle {
   display: none;
+}
+
+.board.panning {
+  cursor: grab;
+  transition: cursor var(--transition-duration) var(--transition-timing);
+}
+
+.board.panning:active {
+  cursor: grabbing;
+}
+
+.text-wrapper,
+.image-wrapper {
+  position: absolute;
+  transform-origin: top left;
+  transition: transform var(--transition-duration) var(--transition-timing);
+}
+
+/* Add this to ensure dragging is smooth */
+.react-draggable-dragging,
+.react-draggable-dragging *,
+.resizing,
+.resizing *,
+.panning,
+.panning * {
+  transition: none !important;
+  animation: none !important;
+  cursor: grabbing !important;
+}
+
+/* Crisp selection states */
+.text-wrapper.selected,
+.image-wrapper.selected {
+  outline: 1px solid var(--border-focus);
+  transition: outline-color var(--hover-duration) var(--transition-timing);
+}
+
+/* Instant style toggle feedback */
+.style-toggle {
+  transition: all var(--hover-duration) var(--transition-timing);
+}
+
+/* Remove transition delay from hover states */
+.text-wrapper:hover .text-drag-handle,
+.text-wrapper.selected .text-style-toggles,
+.image-wrapper:hover .resize-handle {
+  transition-delay: 0s;
 }
  
