@@ -22,7 +22,10 @@
 }
 
 .board-content {
-  position: absolute;
+  position: relative;
+  min-height: 100vh;
+  min-width: 100vw;
+  cursor: default;
   background-image: radial-gradient(circle, var(--grid) 0.5px, transparent 0.5px);
   background-size: 24px 24px;
   transition: none;
@@ -179,6 +182,8 @@
   opacity: 0.4;
   font-size: 13px;
   letter-spacing: 0.2px;
+  pointer-events: none;
+  user-select: none;
 }
 
 .drop-zone p {
@@ -359,7 +364,102 @@
   position: fixed;
   bottom: 20px;
   right: 20px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
   z-index: 1000;
+}
+
+.canvas-selector-wrapper {
+  position: relative;
+  width: 40px;
+  overflow: hidden;
+  transition: width var(--transition-duration) var(--transition-timing);
+  border-radius: 4px;
+}
+
+.canvas-selector-wrapper:hover,
+.canvas-selector-wrapper:focus-within {
+  width: 160px;
+}
+
+.canvas-selector {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text);
+  width: 160px;
+  height: 32px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  opacity: 0.6;
+  transition: all var(--hover-duration) var(--transition-timing);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 28px;
+}
+
+.canvas-selector:hover {
+  opacity: 1;
+  border-color: var(--border-focus);
+}
+
+/* Style the dropdown options */
+.canvas-selector option {
+  background: var(--bg);
+  color: var(--text);
+  padding: 8px;
+  font-size: 13px;
+}
+
+/* Custom focus styles */
+.canvas-selector:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--accent-light);
+  opacity: 1;
+}
+
+/* Ensure consistent height with other buttons */
+.canvas-selector,
+.canvas-button {
+  height: 32px;
+  line-height: 1;
+}
+
+/* Improve the collapsed state */
+.canvas-selector-wrapper:not(:hover):not(:focus-within) .canvas-selector {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h16M4 12h16M4 18h16'/%3E%3C/svg%3E");
+}
+
+.canvas-button {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all var(--hover-duration) var(--transition-timing);
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-button:hover {
+  opacity: 1;
+  background: var(--accent-light);
 }
 
 .reset-button {
@@ -377,5 +477,22 @@
 .reset-button:hover {
   opacity: 1;
   background: var(--accent-light);
+}
+
+.canvas-selector:focus,
+.canvas-button:focus,
+.reset-button:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.board-content-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
 }
  

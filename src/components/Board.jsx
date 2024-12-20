@@ -18,20 +18,33 @@ const TEXT_STYLES = {
 };
 
 const Board = () => {
-  const [images, setImages] = useState(() => {
-    const saved = localStorage.getItem('board-images');
-    return saved ? JSON.parse(saved) : [];
+  const [canvasId, setCanvasId] = useState(() => {
+    return localStorage.getItem('current-canvas') || 'default';
   });
-  
-  const [texts, setTexts] = useState(() => {
-    const saved = localStorage.getItem('board-texts');
-    return saved ? JSON.parse(saved) : [];
+
+  const [canvasList, setCanvasList] = useState(() => {
+    const list = localStorage.getItem('canvas-list');
+    return list ? JSON.parse(list) : [{ id: 'default', name: 'Default Canvas' }];
   });
-  
-  const [textStyles, setTextStyles] = useState(() => {
-    const saved = localStorage.getItem('board-text-styles');
-    return saved ? JSON.parse(saved) : {};
-  });
+
+  const getStorageKey = (key) => `${canvasId}-${key}`;
+
+  const loadCanvasData = (id) => {
+    const savedImages = localStorage.getItem(`${id}-board-images`);
+    const savedTexts = localStorage.getItem(`${id}-board-texts`);
+    const savedStyles = localStorage.getItem(`${id}-board-text-styles`);
+    
+    return {
+      images: savedImages ? JSON.parse(savedImages) : [],
+      texts: savedTexts ? JSON.parse(savedTexts) : [],
+      textStyles: savedStyles ? JSON.parse(savedStyles) : {},
+    };
+  };
+
+  const initialData = loadCanvasData(canvasId);
+  const [images, setImages] = useState(initialData.images);
+  const [texts, setTexts] = useState(initialData.texts);
+  const [textStyles, setTextStyles] = useState(initialData.textStyles);
 
   const [selectedId, setSelectedId] = useState(null);
   const [resizing, setResizing] = useState(null);
@@ -164,7 +177,7 @@ const Board = () => {
         const newImages = [...images, newImage];
         setImages(newImages);
         saveToHistory(newImages, texts, textStyles);
-        localStorage.setItem('board-images', JSON.stringify(newImages));
+        localStorage.setItem(getStorageKey('board-images'), JSON.stringify(newImages));
       };
       
       img.src = event.target.result;
@@ -212,7 +225,7 @@ const Board = () => {
             }
           : img
       );
-      localStorage.setItem('board-images', JSON.stringify(updatedImages));
+      localStorage.setItem(getStorageKey('board-images'), JSON.stringify(updatedImages));
       return updatedImages;
     });
   };
@@ -222,13 +235,22 @@ const Board = () => {
     setResizing(null);
   };
 
+  // Board click handler for new text
   const handleBoardClick = (e) => {
-    if ((e.target === boardRef.current || e.target.classList.contains('board-content')) 
-        && !e.target.closest('.text-wrapper')) {
-      const boardRect = boardRef.current.getBoundingClientRect();
+    // Log the click target for debugging
+    console.log('Click target:', e.target);
+    console.log('Has board-content class:', e.target.classList.contains('board-content'));
+    
+    // Simplified condition to check if we're clicking on the empty board area
+    if (e.target.classList.contains('board-content') 
+        && !e.target.closest('.text-wrapper')
+        && !e.target.closest('.board-controls')
+        && !e.target.closest('.image-wrapper')
+        && !isPanning
+        && !isResizing) {
+      
       const contentRect = boardRef.current.querySelector('.board-content').getBoundingClientRect();
       
-      // Calculate position relative to the content area
       const x = e.clientX - contentRect.left;
       const y = e.clientY - contentRect.top;
       
@@ -237,6 +259,8 @@ const Board = () => {
         content: '',
         position: { x, y }
       };
+      
+      console.log('Creating new text at:', { x, y });
       
       const newTexts = [...texts, newText];
       setTexts(newTexts);
@@ -366,7 +390,10 @@ const Board = () => {
   // Add pan start handler
   const handlePanStart = (e) => {
     // Only start panning on alt+click or two-finger touchpad gesture
-    if (e.altKey || (e.touches && e.touches.length === 2)) {
+    // And make sure we're not clicking on an image, text, or control
+    if ((e.altKey || (e.touches && e.touches.length === 2)) && 
+        e.target === boardRef.current || 
+        e.target.classList.contains('board-content')) {
       e.preventDefault();
       setIsPanning(true);
       lastMousePosition.current = { 
@@ -389,9 +416,9 @@ const Board = () => {
     setSelectedId(null);
     setSelectedText(null);
     setEditingText(null);
-    localStorage.removeItem('board-images');
-    localStorage.removeItem('board-texts');
-    localStorage.removeItem('board-text-styles');
+    localStorage.removeItem(getStorageKey('board-images'));
+    localStorage.removeItem(getStorageKey('board-texts'));
+    localStorage.removeItem(getStorageKey('board-text-styles'));
   };
 
   const returnToOrigin = () => {
@@ -400,7 +427,7 @@ const Board = () => {
 
   // Add useEffect to save positions on reload
   useEffect(() => {
-    const savedImages = JSON.parse(localStorage.getItem('board-images'));
+    const savedImages = JSON.parse(localStorage.getItem(getStorageKey('board-images')));
     if (savedImages) {
       setImages(savedImages);
     }
@@ -408,10 +435,12 @@ const Board = () => {
 
   // Save to localStorage whenever state changes
   useEffect(() => {
-    localStorage.setItem('board-images', JSON.stringify(images));
-    localStorage.setItem('board-texts', JSON.stringify(texts));
-    localStorage.setItem('board-text-styles', JSON.stringify(textStyles));
-  }, [images, texts, textStyles]);
+    if (!canvasId) return;
+    
+    localStorage.setItem(`${canvasId}-board-images`, JSON.stringify(images));
+    localStorage.setItem(`${canvasId}-board-texts`, JSON.stringify(texts));
+    localStorage.setItem(`${canvasId}-board-text-styles`, JSON.stringify(textStyles));
+  }, [images, texts, textStyles, canvasId]);
 
   const handleImageDragStop = (id, newPosition) => {
     setImages(prev => {
@@ -423,7 +452,7 @@ const Board = () => {
             }
           : img
       );
-      localStorage.setItem('board-images', JSON.stringify(updatedImages)); // Save updated image positions
+      localStorage.setItem(getStorageKey('board-images'), JSON.stringify(updatedImages)); // Save updated image positions
       return updatedImages;
     });
   };
@@ -441,41 +470,125 @@ const Board = () => {
     }
   };
 
+  const createNewCanvas = () => {
+    const name = prompt('Enter canvas name:');
+    if (!name) return;
+    
+    const id = `canvas-${Date.now()}`;
+    const newCanvas = { id, name };
+    
+    setCanvasList(prev => {
+      const updated = [...prev, newCanvas];
+      localStorage.setItem('canvas-list', JSON.stringify(updated));
+      return updated;
+    });
+    
+    switchCanvas(id);
+  };
+
+  const switchCanvas = (id) => {
+    console.log('switchCanvas called with id:', id); // Debug log
+    setCanvasId(id);
+    localStorage.setItem('current-canvas', id);
+    
+    const data = loadCanvasData(id);
+    console.log('Loading data for canvas:', id, data); // Debug log
+    
+    setImages(data.images);
+    setTexts(data.texts);
+    setTextStyles(data.textStyles);
+    setViewportOffset({ x: 0, y: 0 });
+  };
+
+  const deleteCanvas = (id) => {
+    if (canvasList.length <= 1) {
+      alert('Cannot delete the last canvas');
+      return;
+    }
+
+    const canvas = canvasList.find(c => c.id === id);
+    const confirmText = prompt(`Type "${canvas.name}" to delete this canvas:`);
+    if (confirmText !== canvas.name) {
+      if (confirmText !== null) { // Only show error if user didn't cancel
+        alert('Incorrect canvas name. Canvas was not deleted.');
+      }
+      return;
+    }
+
+    // Remove canvas-specific data
+    localStorage.removeItem(getStorageKey('board-images'));
+    localStorage.removeItem(getStorageKey('board-texts'));
+    localStorage.removeItem(getStorageKey('board-text-styles'));
+    
+    setCanvasList(prev => {
+      const updated = prev.filter(c => c.id !== id);
+      localStorage.setItem('canvas-list', JSON.stringify(updated));
+      return updated;
+    });
+    
+    // Switch to first available canvas if deleting current
+    if (id === canvasId) {
+      const firstCanvas = canvasList.find(c => c.id !== id);
+      switchCanvas(firstCanvas.id);
+    }
+  };
+
+  // Add an effect to handle canvas switching
+  useEffect(() => {
+    const data = loadCanvasData(canvasId);
+    setImages(data.images);
+    setTexts(data.texts);
+    setTextStyles(data.textStyles);
+  }, [canvasId]); // This effect runs when canvasId changes
+
+  // Add the rename function
+  const renameCanvas = (id) => {
+    const canvas = canvasList.find(c => c.id === id);
+    const newName = prompt('Enter new name:', canvas.name);
+    
+    if (!newName || newName === canvas.name) return; // Cancel if empty or unchanged
+    
+    setCanvasList(prev => {
+      const updated = prev.map(c => 
+        c.id === id ? { ...c, name: newName } : c
+      );
+      localStorage.setItem('canvas-list', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
     <div 
       ref={boardRef}
       className={`board ${isPanning ? 'panning' : ''} ${isResizing ? 'resizing' : ''}`}
+      onMouseDown={handlePanStart}
       onMouseMove={(e) => {
-        handleMouseMove(e);
-        handleTextResize(e);
         handlePan(e);
+        handleMouseMove(e);
       }}
       onMouseUp={() => {
-        stopResize();
-        stopTextResize();
         handlePanEnd();
+        stopResize();
       }}
-      onMouseDown={handlePanStart}
       onMouseLeave={() => {
-        stopResize();
-        stopTextResize();
         handlePanEnd();
+        stopResize();
       }}
+      onTouchStart={handlePanStart}
+      onTouchMove={handlePan}
+      onTouchEnd={handlePanEnd}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
-      onClick={handleBoardClick}
     >
       <div 
         className="board-content"
         style={{
           transform: `translate3d(${viewportOffset.x}px, ${viewportOffset.y}px, 0)`,
-          width: '200%',
-          height: '200%',
-          left: '-50%',
-          top: '-50%',
-          position: 'absolute',
-          transformOrigin: '50% 50%'
+          minHeight: '100%', // Ensure the div takes up space
+          minWidth: '100%',  // Ensure the div takes up space
+          position: 'relative' // Make sure position calculations work
         }}
+        onClick={handleBoardClick}
       >
         {images.map((image) => (
           <Draggable 
@@ -510,11 +623,15 @@ const Board = () => {
           <Draggable
             key={text.id}
             defaultPosition={text.position}
-            cancel="textarea,.style-toggle"
+            cancel="textarea,.style-toggle,.resize-handle"
+            onMouseDown={(e) => e.stopPropagation()} // Prevent pan when interacting with text
           >
             <div 
               className={`text-wrapper ${editingText === text.id ? 'editing' : ''} ${selectedText === text.id ? 'selected' : ''}`}
-              onClick={(e) => handleTextClick(e, text.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleTextClick(e, text.id);
+              }}
             >
               <div className="text-drag-handle">⋮⋮</div>
               {selectedText === text.id && (
@@ -544,6 +661,7 @@ const Board = () => {
                 onChange={(e) => handleTextChange(text.id, e.target.value)}
                 onBlur={() => handleTextBlur(text.id)}
                 onFocus={() => setEditingText(text.id)}
+                onMouseDown={(e) => e.stopPropagation()} // Prevent pan when typing
                 autoFocus={editingText === text.id}
                 placeholder="Type here..."
                 style={{
@@ -573,17 +691,77 @@ const Board = () => {
             </p>
           </div>
         )}
+
+        {/* Add a transparent overlay to catch clicks when empty */}
+        {images.length === 0 && texts.length === 0 && (
+          <div 
+            className="board-content-overlay"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: -1
+            }}
+          />
+        )}
       </div>
+      
       <div className="board-controls">
+        <div className="canvas-selector-wrapper">
+          <select 
+            value={canvasId} 
+            onChange={(e) => switchCanvas(e.target.value)}
+            className="canvas-selector"
+            title="Select Canvas"
+            aria-label="Select Canvas"
+          >
+            {canvasList.map(canvas => (
+              <option 
+                key={canvas.id} 
+                value={canvas.id}
+                title={canvas.name}
+              >
+                {canvas.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <button 
-          className="reset-button" 
+          className="canvas-button" 
+          onClick={createNewCanvas}
+          title="Create new canvas"
+        >
+          +
+        </button>
+        <button 
+          className="canvas-button" 
+          onClick={() => renameCanvas(canvasId)}
+          title="Rename current canvas"
+        >
+          ✎
+        </button>
+        <button 
+          className="canvas-button" 
+          onClick={() => deleteCanvas(canvasId)}
+          title="Delete current canvas"
+        >
+          ×
+        </button>
+        <button 
+          className="canvas-button" 
+          onClick={returnToOrigin}
+          title="Return to center of canvas"
+        >
+          ⌂
+        </button>
+        <button 
+          className="canvas-button" 
           onClick={handleReset}
           title='Type "delete CANVAS" to reset'
         >
-          Reset Board
-        </button>
-        <button className="reset-button" onClick={returnToOrigin}>
-          Return to Origin
+          ↺
         </button>
       </div>
     </div>
